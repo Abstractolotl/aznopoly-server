@@ -9,7 +9,11 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun run start
 ```
 
-This project was created using `bun init` in bun v1.0.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+# Rooms
+
+Server will upgrade all requests which start with /room/[a-z\d-]{6,} to a websocket request and
+will subscribe the client to the desired room.
+Every message sent will automatically be broadcast to room.
