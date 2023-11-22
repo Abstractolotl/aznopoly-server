@@ -9,16 +9,16 @@ const server = Bun.serve<ClientData>({
       // Rooms will be available via /room/<room-uuid>
       if ( routes[1].toLowerCase() === 'room') {
          if(routes.length < 3) {
-            return new Response("No roomId provided", {status: 400})
+            return new Response(JSON.stringify({message: "No roomId provided"}), {status: 400})
          }
 
          let roomId = routes[2].toLowerCase();
          if(!roomId.match(/[a-z\d-]{6,}/)) {
-            return new Response("Invalid roomId provided", {status: 400})
+            return new Response(JSON.stringify({message: "Invalid roomId provided"}), {status: 400})
          }
 
          if(!request.headers.has('X-Username')) {
-            return new Response("Username is required", {status: 400})
+            return new Response(JSON.stringify({message: "Username is required"}), {status: 400})
          }
 
          const success = server.upgrade(request, {
@@ -27,11 +27,11 @@ const server = Bun.serve<ClientData>({
                username: request.headers.get('X-Username')
             }
          });
-         return success ? undefined : new Response("WebSocket upgrade error", { status: 400 });
+         return success ? undefined : new Response(JSON.stringify({message: "WebSocket upgrade error"}), { status: 400 });
       } else if(routes[1].toLowerCase() === 'health') {
          return handleHealthEndpoints(routes)
       }
-      return new Response("No route found", {status: 404});
+      return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
    },
    websocket: {
       open(webSocket: ServerWebSocket<ClientData>): void | Promise<void> {
