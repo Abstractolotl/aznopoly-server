@@ -1,5 +1,6 @@
 import {Server, ServerWebSocket} from "bun";
 import {ClientData} from "@/types.ts";
+import {handleHealthEndpoints} from "@/routes/health.ts";
 
 const server = Bun.serve<ClientData>({
    fetch(request: Request, server: Server): undefined | Response {
@@ -27,6 +28,8 @@ const server = Bun.serve<ClientData>({
             }
          });
          return success ? undefined : new Response("WebSocket upgrade error", { status: 400 });
+      } else if(routes[1].toLowerCase() === 'health') {
+         return handleHealthEndpoints(routes)
       }
       return new Response("No route found", {status: 404});
    },
