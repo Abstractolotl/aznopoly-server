@@ -46,7 +46,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm upgrade --install --atomic --timeout 5m --history-max 5 --namespace=backend --set image.tag=$IMAGE_NAME aznopoly-server helmfiles
+          exec: helm upgrade --install --atomic --timeout 5m --history-max 5 --namespace=backend --set image.tag=$IMAGE_NAME aznopoly-server helm-charts
           kubeconfig: '${{ secrets.KUBECONFIG }}'
         env:
           HARBOR_URI: ${{ secrets.HARBOR_URI }}
