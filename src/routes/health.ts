@@ -9,6 +9,7 @@ export function handleHealthEndpoints(routes: string[]): undefined | Response  {
         return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
     }
 
+    // Only allow readiness/liveness as endpoints
     if(routes[2].toLowerCase() === 'readiness' || routes[2].toLowerCase() === 'liveness') {
         let body = {state: 'unknown'}
         return new Response(JSON.stringify(body), {status: 200});

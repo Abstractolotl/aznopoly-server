@@ -19,6 +19,7 @@ const server = Bun.serve<ClientData>({
             return new Response(JSON.stringify({message: "Invalid roomId provided"}), {status: 400})
          }
 
+         // Check if a username is provided
          if(!request.headers.has('X-Username')) {
             logger.warning("Request with missing header was sent")
             return new Response(JSON.stringify({message: "Username is required"}), {status: 400})
