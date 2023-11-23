@@ -1,0 +1,53 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image_name.outputs.image }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate image name
+        id: image_name
+        run: echo "image=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Login to Harbor
+        run: |
+          echo $HARBOR_PASSWORD | docker login $HARBOR_URI -u $HARBOR_USERNAME --password-stdin
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+          HARBOR_URI: ${{ secrets.HARBOR_URI }}
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag $HARBOR_URI/abstractolotl/aznopoly-server:$IMAGE_NAME --tag $HARBOR_URI/abstractolotl/aznopoly-server:latest
+        env:
+          HARBOR_URI: ${{ secrets.HARBOR_URI }}
+          IMAGE_NAME: ${{ steps.image_name.outputs.image }}
+
+      - name: Push the Docker image
+        run: docker push $HARBOR_URI/abstractolotl/aznopoly-server --all-tags
+        env:
+          HARBOR_URI: ${{ secrets.HARBOR_URI }}
+
+  deployment:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'  # Checkout the repository code.
+        uses: 'actions/checkout@v3'
+
+      - name: Deploy
+        uses: WyriHaximus/github-action-helm3@v3
+        with:
+          exec: helm upgrade --install --atomic --timeout 5m --history-max 5 --namespace=backend --set image.tag=$IMAGE_NAME aznopoly-server helmfiles
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
+        env:
+          HARBOR_URI: ${{ secrets.HARBOR_URI }}
+          IMAGE_NAME: ${{needs.publish.outputs.image}}

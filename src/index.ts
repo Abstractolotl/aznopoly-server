@@ -9,12 +9,12 @@ const server = Bun.serve<ClientData>({
       const url = new URL(request.url)
       let routes = url.pathname.split("/")
       // Rooms will be available via /room/<room-uuid>
-      if ( routes[1].toLowerCase() === 'room') {
-         if(routes.length < 3) {
+      if ( routes[1].toLowerCase() === 'server' && routes[2].toLowerCase() === 'room') {
+         if(routes.length < 4) {
             return new Response(JSON.stringify({message: "No roomId provided"}), {status: 400})
          }
 
-         let roomId = routes[2].toLowerCase();
+         let roomId = routes[3].toLowerCase();
          if(!roomId.match(/[a-z\d-]{6,}/)) {
             return new Response(JSON.stringify({message: "Invalid roomId provided"}), {status: 400})
          }
