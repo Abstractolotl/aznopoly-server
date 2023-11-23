@@ -8,6 +8,11 @@ export function handleHealthEndpoints(routes: string[]): undefined | Response  {
     if(routes.length < 3) {
         return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
     }
-    let body = {state: 'unknown'}
-    return new Response(JSON.stringify(body), {status: 200});
+
+    if(routes[2].toLowerCase() === 'readiness' || routes[2].toLowerCase() === 'liveness') {
+        let body = {state: 'unknown'}
+        return new Response(JSON.stringify(body), {status: 200});
+    }
+
+    return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
 }

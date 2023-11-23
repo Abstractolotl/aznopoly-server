@@ -1,7 +1,9 @@
 import {Server, ServerWebSocket} from "bun";
 import {ClientData} from "@/types.ts";
 import {handleHealthEndpoints} from "@/routes/health.ts";
+import {Logger} from "@/lib/logger.ts";
 
+const logger = new Logger();
 const server = Bun.serve<ClientData>({
    fetch(request: Request, server: Server): undefined | Response {
       const url = new URL(request.url)
@@ -18,6 +20,7 @@ const server = Bun.serve<ClientData>({
          }
 
          if(!request.headers.has('X-Username')) {
+            logger.warning("Request with missing header was sent")
             return new Response(JSON.stringify({message: "Username is required"}), {status: 400})
          }
 
@@ -35,7 +38,7 @@ const server = Bun.serve<ClientData>({
    },
    websocket: {
       open(webSocket: ServerWebSocket<ClientData>): void | Promise<void> {
-         console.log(`${webSocket.data.username} connected to room ${webSocket.data.roomId}`)
+         logger.info(`${webSocket.data.username} connected to room ${webSocket.data.roomId}`)
          webSocket.subscribe(webSocket.data.roomId)
          webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: joined the room`)
       },
@@ -43,11 +46,11 @@ const server = Bun.serve<ClientData>({
          webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: ${message}`)
       },
       close(webSocket: ServerWebSocket<ClientData>, code: number, reason: string): void | Promise<void> {
-         console.log(`${webSocket.data.username} disconnected from room ${webSocket.data.roomId}`)
+         logger.info(`${webSocket.data.username} disconnected from room ${webSocket.data.roomId}`)
          webSocket.unsubscribe(webSocket.data.roomId)
          webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: left the room`)
       }
    }
 });
 
-console.log(`Listening on ${server.hostname}:${server.port}`);
+logger.info(`Listening on ${server.hostname}:${server.port}`)
