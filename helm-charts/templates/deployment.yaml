@@ -13,6 +13,7 @@ spec:
       {{- include "aznopoly-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      labels:
         {{- include "aznopoly-server.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
