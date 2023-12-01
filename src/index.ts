@@ -2,9 +2,14 @@ import {Server, ServerWebSocket} from "bun";
 import {ClientData} from "@/types.ts";
 import {handleHealthEndpoints} from "@/routes/health.ts";
 import {Logger} from "@/lib/logger.ts";
+import {SimplePacket} from "@/lib/packet.ts";
+import RoomManager from "@/lib/room_manager.ts";
 
 const logger = new Logger();
+const roomManager = new RoomManager(4)
 const server = Bun.serve<ClientData>({
+   port: 3000,
+   development: false,
    fetch(request: Request, server: Server): undefined | Response {
       const url = new URL(request.url)
       let routes = url.pathname.split("/")
@@ -25,16 +30,10 @@ const server = Bun.serve<ClientData>({
                return new Response(JSON.stringify({message: "Invalid roomId provided"}), {status: 400})
             }
 
-            // Check if a username is provided
-            if (!request.headers.has('X-Username')) {
-               logger.warning("Request with missing header was sent")
-               return new Response(JSON.stringify({message: "Username is required"}), {status: 400})
-            }
-
             const success = server.upgrade(request, {
                data: {
                   roomId: roomId,
-                  username: request.headers.get('X-Username')
+                  uuid: crypto.randomUUID()
                }
             });
             return success ? undefined : new Response(JSON.stringify({message: "WebSocket upgrade error"}), {status: 400});
@@ -46,17 +45,25 @@ const server = Bun.serve<ClientData>({
    },
    websocket: {
       open(webSocket: ServerWebSocket<ClientData>): void | Promise<void> {
-         logger.info(`${webSocket.data.username} connected to room ${webSocket.data.roomId}`)
-         webSocket.subscribe(webSocket.data.roomId)
-         webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: joined the room`)
+         if (roomManager.joinRoom(webSocket.data.roomId, webSocket.data.uuid)) {
+            logger.info(`${webSocket.data.uuid} connected to room ${webSocket.data.roomId}`)
+            webSocket.subscribe(webSocket.data.roomId)
+
+            webSocket.send(new SimplePacket("INFO", roomManager.getRoom(webSocket.data.roomId)).toString())
+            webSocket.publish(webSocket.data.roomId, new SimplePacket('JOIN', webSocket.data.uuid).toString())
+         } else {
+            webSocket.close(1011, new SimplePacket("LIMIT", webSocket.data.roomId).toString())
+         }
       },
       message: function (webSocket: ServerWebSocket<ClientData>, message: string | Buffer): void | Promise<void> {
-         webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: ${message}`)
+         webSocket.publish(webSocket.data.roomId, message)
       },
       close(webSocket: ServerWebSocket<ClientData>, code: number, reason: string): void | Promise<void> {
-         logger.info(`${webSocket.data.username} disconnected from room ${webSocket.data.roomId}`)
+         roomManager.leaveRoom(webSocket.data.roomId, webSocket.data.uuid)
+         logger.info(`${webSocket.data.uuid} disconnected from room ${webSocket.data.roomId}`)
+
          webSocket.unsubscribe(webSocket.data.roomId)
-         webSocket.publish(webSocket.data.roomId, `${webSocket.data.username}: left the room`)
+         webSocket.publish(webSocket.data.roomId, new SimplePacket('QUIT', webSocket.data.uuid).toString())
       }
    }
 });

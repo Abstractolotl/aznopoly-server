@@ -1,4 +1,4 @@
 export interface ClientData {
     roomId: string,
-    username: string
+    uuid: string
 }
