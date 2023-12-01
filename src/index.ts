@@ -49,6 +49,7 @@ const server = Bun.serve<ClientData>({
             logger.info(`${webSocket.data.uuid} connected to room ${webSocket.data.roomId}`)
             webSocket.subscribe(webSocket.data.roomId)
 
+            webSocket.send(new SimplePacket("UUID", webSocket.data.uuid).toString())
             webSocket.send(new SimplePacket("INFO", roomManager.getRoom(webSocket.data.roomId)).toString())
             webSocket.publish(webSocket.data.roomId, new SimplePacket('JOIN', webSocket.data.uuid).toString())
          } else {
