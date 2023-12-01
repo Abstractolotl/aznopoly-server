@@ -28,15 +28,15 @@ export default class RoomManager {
         }
     }
 
-    getRoom(room: string) : string {
+    getRoom(room: string) : object {
         if( this.rooms.has(room) ) {
             let roomData = this.rooms.get(room);
-            return JSON.stringify({
+            return {
                 'host': roomData?.getHost(),
                 'clients': roomData?.getClientList()
-            });
+            };
         }
-        return ""
+        return {}
     }
 }
 
