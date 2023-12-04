@@ -49,9 +49,9 @@ const server = Bun.serve<ClientData>({
             logger.info(`${webSocket.data.uuid} connected to room ${webSocket.data.roomId}`)
             webSocket.subscribe(webSocket.data.roomId)
 
-            webSocket.send(new SimplePacket("UUID", webSocket.data.uuid).toString())
-            webSocket.send(new SimplePacket("INFO", roomManager.getRoom(webSocket.data.roomId)).toString())
-            webSocket.publish(webSocket.data.roomId, new SimplePacket('JOIN', webSocket.data.uuid).toString())
+            webSocket.send(new SimplePacket("ROOM_WELCOME", webSocket.data.uuid).toString())
+            webSocket.send(new SimplePacket("ROOM_INFO", roomManager.getRoom(webSocket.data.roomId)).toString())
+            webSocket.publish(webSocket.data.roomId, new SimplePacket('ROOM_JOIN', webSocket.data.uuid).toString())
          } else {
             webSocket.close(1011, new SimplePacket("LIMIT", webSocket.data.roomId).toString())
          }
@@ -64,7 +64,7 @@ const server = Bun.serve<ClientData>({
          logger.info(`${webSocket.data.uuid} disconnected from room ${webSocket.data.roomId}`)
 
          webSocket.unsubscribe(webSocket.data.roomId)
-         webSocket.publish(webSocket.data.roomId, new SimplePacket('QUIT', webSocket.data.uuid).toString())
+         webSocket.publish(webSocket.data.roomId, new SimplePacket('ROOM_QUIT', webSocket.data.uuid).toString())
       }
    }
 });
