@@ -1,4 +1,4 @@
-export class SimplePacket {
+export class ServerPacket {
 
     private readonly type: string;
     private readonly data: unknown;
@@ -15,4 +15,31 @@ export class SimplePacket {
         })
     }
 
+}
+
+export class WelcomePacket extends ServerPacket {
+
+    constructor(uuid: string, room: object) {
+        super("ROOM_WELCOME", {
+            'uuid': uuid,
+            'room': room
+        })
+    }
+
+}
+
+export class JoinPacket extends ServerPacket {
+    constructor(uuid: string) {
+        super("ROOM_JOIN", {
+            'uuid': uuid
+        });
+    }
+}
+
+export class QuitPacket extends ServerPacket {
+    constructor(uuid: string) {
+        super("ROOM_QUIT", {
+            'uuid': uuid
+        });
+    }
 }
