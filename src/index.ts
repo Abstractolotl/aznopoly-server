@@ -48,7 +48,7 @@ const server = Bun.serve<ClientData>({
          if (roomManager.joinRoom(webSocket.data.roomId, webSocket.data.uuid)) {
             logger.info(`${webSocket.data.uuid} connected to room ${webSocket.data.roomId}`)
 
-            webSocket.publish(webSocket.data.roomId, new JoinPacket(webSocket.data.uuid).toString())
+            server.publish(webSocket.data.roomId, new JoinPacket(webSocket.data.uuid).toString())
             webSocket.subscribe(webSocket.data.roomId)
             webSocket.send(new WelcomePacket(webSocket.data.uuid, roomManager.getRoom(webSocket.data.roomId)).toString())
          } else {
@@ -63,7 +63,7 @@ const server = Bun.serve<ClientData>({
          logger.info(`${webSocket.data.uuid} disconnected from room ${webSocket.data.roomId}`)
 
          webSocket.unsubscribe(webSocket.data.roomId)
-         webSocket.publish(webSocket.data.roomId, new QuitPacket(webSocket.data.uuid).toString())
+         server.publish(webSocket.data.roomId, new QuitPacket(webSocket.data.uuid).toString())
       }
    }
 });
