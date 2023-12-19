@@ -2,7 +2,7 @@ import {Server, ServerWebSocket} from "bun";
 import {ClientData} from "@/types.ts";
 import {handleHealthEndpoints} from "@/routes/health.ts";
 import {Logger} from "@/lib/logger.ts";
-import {JoinPacket, QuitPacket, ServerPacket, WelcomePacket} from "@/lib/packet.ts";
+import {ClientPacket, JoinPacket, Packet, QuitPacket, ServerPacket, WelcomePacket} from "@/lib/packet.ts";
 import RoomManager from "@/lib/room_manager.ts";
 
 const logger = new Logger();
@@ -55,8 +55,14 @@ const server = Bun.serve<ClientData>({
             webSocket.close(1011, new ServerPacket("LIMIT", webSocket.data.roomId).toString())
          }
       },
-      message: function (webSocket: ServerWebSocket<ClientData>, message: string | Buffer): void | Promise<void> {
-         webSocket.publish(webSocket.data.roomId, message)
+      message: function (webSocket: ServerWebSocket<ClientData>, message: string): void | Promise<void> {
+         let packet = JSON.parse(message) as Packet;
+         if(packet !== undefined && packet.getType().startsWith("CLIENT_")) {
+            let clientPacket = new ClientPacket(webSocket.data.uuid, packet.getType(), packet.getData());
+            webSocket.publish(webSocket.data.roomId, clientPacket.toString())
+         } else {
+            webSocket.send(new ServerPacket("ERROR", {'message': `Invalid packet type: ${packet.getType()}`}).toString())
+         }
       },
       close(webSocket: ServerWebSocket<ClientData>, code: number, reason: string): void | Promise<void> {
          roomManager.leaveRoom(webSocket.data.roomId, webSocket.data.uuid)
