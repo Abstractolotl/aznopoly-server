@@ -1,5 +1,6 @@
 import {describe, expect, test} from "bun:test";
 import {handleHealthEndpoints} from "@/routes/health.ts";
+
 describe("health-endpoints", () => {
     test("invalid", () => {
         expect(handleHealthEndpoints(["bla", "health", "invalid"])?.status).toBe(404)

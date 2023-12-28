@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "bun run --bun src/index.ts",
-    "build": "bun build src/index.ts --outdir ./build"
+    "build": "bun build src/index.ts --outdir ./build",
+    "test": "bun test"
   }
 }
