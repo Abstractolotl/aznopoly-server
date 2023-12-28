@@ -60,7 +60,7 @@ export default function startServer(logger: Logger, roomManager: RoomManager, po
                     let clientPacket = new ClientPacket(webSocket.data.uuid, packet.type, packet.data);
                     webSocket.publish(webSocket.data.roomId, JSON.stringify(clientPacket))
                 } else {
-                    webSocket.send(JSON.stringify(new ServerPacket("ERROR", {'message': `Invalid packet type: ${packet.type}`})))
+                    webSocket.send(JSON.stringify(new Packet("ERROR", {'message': `Invalid packet type: ${packet.type}`})))
                 }
             },
             close(webSocket: ServerWebSocket<ClientData>, code: number, reason: string): void | Promise<void> {
