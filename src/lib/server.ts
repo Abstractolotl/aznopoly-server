@@ -4,14 +4,16 @@ import {Server, ServerWebSocket} from "bun";
 import {handleHealthEndpoints} from "@/routes/health.ts";
 import {ClientPacket, JoinPacket, Packet, QuitPacket, ServerPacket, WelcomePacket} from "@/lib/packet.ts";
 import {Logger} from "@/lib/logger.ts";
+import {handleDiscordAuthentication} from "@/routes/discord.ts";
 
 export default function startServer(logger: Logger, roomManager: RoomManager, port: number = 3000) : Server {
     const server = Bun.serve<ClientData>({
         port: port,
         development: false,
-        fetch(request: Request, server: Server): undefined | Response {
+        fetch(request: Request, server: Server): Promise<Response> | Response | undefined {
             const url = new URL(request.url)
             let routes = url.pathname.split("/")
+
             // Rooms will be available via /room/<room-uuid>
             if (routes[1].toLowerCase() === 'server') {
 
@@ -36,6 +38,11 @@ export default function startServer(logger: Logger, roomManager: RoomManager, po
                         }
                     });
                     return success ? undefined : new Response(JSON.stringify({message: "WebSocket upgrade error"}), {status: 400});
+                } else if (routes[2].toLowerCase() == 'token') {
+                    if (request.method !== 'POST') {
+                        return new Response(JSON.stringify({message: 'Method not allowed'}), {status: 405});
+                    }
+                    return handleDiscordAuthentication(request)
                 }
             } else if(routes[1].toLowerCase() === 'health') {
                 return handleHealthEndpoints(routes)
