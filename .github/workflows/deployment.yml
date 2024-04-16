@@ -50,8 +50,8 @@ jobs:
           url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-            applications/aznopoly DISCORD_CLIENT_ID;
-            applications/aznopoly DISCORD_CLIENT_SECRET;
+            secrets/applications/aznopoly DISCORD_CLIENT_ID;
+            secrets/applications/aznopoly DISCORD_CLIENT_SECRET;
 
       - name: Step following 'Import Secrets'
         run: |
