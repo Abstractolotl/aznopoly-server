@@ -28,6 +28,9 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "aznopoly-server.fullname" . }}
           livenessProbe: {{ toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe: {{ toYaml .Values.readinessProbe | nindent 12 }}
           resources:
