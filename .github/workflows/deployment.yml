@@ -42,6 +42,8 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@v4'
+      - name: Install jq
+        uses: dcarbone/install-jq-action@v2.1.0
 
       - name: Import Secrets
         id: import-secrets
@@ -58,13 +60,7 @@ jobs:
       - name: Step following 'Import Secrets'
         run: |
           touch secrets.json
-          echo '${{ toJson(steps.import-secrets.outputs) }}' >> vault_secrets.json
-
-      - name: Format secrets for helm
-        uses: sergeysova/jq-action@v2
-        with:
-          cmd: |
-            cat vault_secrets.json | jq "'. | {"secrets": .}'" > secrets.json
+          echo '${{ toJson(steps.import-secrets.outputs) }}' | jq ". | {"secrets": .}" > secrets.json
 
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v4
