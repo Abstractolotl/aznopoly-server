@@ -48,10 +48,12 @@ jobs:
         uses: hashicorp/vault-action@v2
         with:
           url: ${{ secrets.VAULT_ADDR }}
-          token: ${{ secrets.VAULT_TOKEN }}
+          method: userpass
+          username: ${{ secrets.VAULT_USERNAME }}
+          password: ${{ secrets.VAULT_PASSWORD }}
           secrets: |
-            secrets/data/applications/aznopoly DISCORD_CLIENT_ID;
-            secrets/data/applications/aznopoly DISCORD_CLIENT_SECRET;
+            applications/aznopoly DISCORD_CLIENT_ID;
+            applications/aznopoly DISCORD_CLIENT_SECRET
 
       - name: Step following 'Import Secrets'
         run: |
