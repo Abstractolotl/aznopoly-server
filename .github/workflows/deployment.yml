@@ -52,8 +52,8 @@ jobs:
           username: ${{ secrets.VAULT_USERNAME }}
           password: ${{ secrets.VAULT_PASSWORD }}
           secrets: |
-            applications/aznopoly DISCORD_CLIENT_ID;
-            applications/aznopoly DISCORD_CLIENT_SECRET
+            applications/data/aznopoly DISCORD_CLIENT_ID;
+            applications/data/aznopoly DISCORD_CLIENT_SECRET
 
       - name: Step following 'Import Secrets'
         run: |
