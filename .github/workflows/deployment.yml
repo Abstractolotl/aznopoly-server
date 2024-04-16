@@ -45,7 +45,7 @@ jobs:
 
       - name: Import Secrets
         id: import-secrets
-        uses: hashicorp/vault-action@v2
+        uses: hashicorp/vault-action@v3
         with:
           url: ${{ secrets.VAULT_ADDR }}
           method: userpass
@@ -58,12 +58,18 @@ jobs:
       - name: Step following 'Import Secrets'
         run: |
           touch secrets.json
-          echo '${{ toJson(steps.import-secrets.outputs) }}' >> secrets.json
+          echo '${{ toJson(steps.import-secrets.outputs) }}' >> vault_secrets.json
+
+      - name: Format secrets for helm
+        uses: sergeysova/jq-action@v2
+        with:
+          cmd: |
+            cat vault_secrets.json | jq "'. | {"secrets": .}'" > secrets.json
 
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
-          exec: helm upgrade --install --atomic --timeout 5m --history-max 5 --namespace=backend --set image.tag=$IMAGE_NAME aznopoly-server helm-charts
+          exec: helm upgrade --install --atomic --timeout 5m --history-max 5 -f secrets.json --namespace=backend --set image.tag=$IMAGE_NAME aznopoly-server helm-charts
           kubeconfig: '${{ secrets.KUBECONFIG }}'
         env:
           HARBOR_URI: ${{ secrets.HARBOR_URI }}
