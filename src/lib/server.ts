@@ -6,48 +6,52 @@ import {ClientPacket, JoinPacket, Packet, QuitPacket, ServerPacket, WelcomePacke
 import {Logger} from "@/lib/logger.ts";
 import {handleDiscordAuthentication} from "@/routes/discord.ts";
 
+const HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+}
+
 export default function startServer(logger: Logger, roomManager: RoomManager, port: number = 3000) : Server {
     const server = Bun.serve<ClientData>({
         port: port,
         development: false,
         fetch(request: Request, server: Server): Promise<Response> | Response | undefined {
-            const url = new URL(request.url)
-            let routes = url.pathname.split("/")
+            const { method } = request;
+            const { pathname } = new URL(request.url);
+            const roomRegex = /^\/server\/room\/([a-z\d-]{6,})$/;
 
-            // Rooms will be available via /room/<room-uuid>
-            if (routes[1].toLowerCase() === 'server') {
+            if (method === 'GET' && pathname === '/health') {
+                return handleHealthEndpoints(pathname.split('/'))
+            }
 
-                if (routes.length < 3) {
-                    return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
-                }
+            if (method === 'GET') {
+                const match = pathname.match(roomRegex);
+                const id = match && match[1];
 
-                if (routes[2].toLowerCase() === 'room') {
-                    if (routes.length < 4) {
-                        return new Response(JSON.stringify({message: "No roomId provided"}), {status: 400})
-                    }
-
-                    let roomId = routes[3].toLowerCase();
-                    if (!roomId.match(/[a-z\d-]{6,}/)) {
-                        return new Response(JSON.stringify({message: "Invalid roomId provided"}), {status: 400})
-                    }
-
+                if (id) {
                     const success = server.upgrade(request, {
                         data: {
-                            roomId: roomId,
+                            roomId: id,
                             uuid: crypto.randomUUID()
                         }
                     });
-                    return success ? undefined : new Response(JSON.stringify({message: "WebSocket upgrade error"}), {status: 400});
-                } else if (routes[2].toLowerCase() == 'token') {
-                    if (request.method !== 'POST') {
-                        return new Response(JSON.stringify({message: 'Method not allowed'}), {status: 405});
-                    }
-                    return handleDiscordAuthentication(request)
+                    return success ? undefined : new Response(JSON.stringify({message: "WebSocket upgrade error"}), {headers: HEADERS, status: 400});
                 }
-            } else if(routes[1].toLowerCase() === 'health') {
-                return handleHealthEndpoints(routes)
             }
-            return new Response(JSON.stringify({message: 'Page not found'}), {status: 404});
+
+            if (method === 'POST' && pathname === '/server/token') {
+                if (request.headers.get('content-type') !== 'application/json') {
+                    return new Response(JSON.stringify({message: 'Invalid content-type'}), {headers: HEADERS, status: 400});
+                }
+                return handleDiscordAuthentication(request);
+            }
+
+            if (method === 'OPTIONS' ) {
+                return new Response(null, {headers: HEADERS, status: 200});
+            }
+
+            return new Response(JSON.stringify({message: 'Page not found'}), {headers: HEADERS, status: 404});
         },
         websocket: {
             open(webSocket: ServerWebSocket<ClientData>): void | Promise<void> {
