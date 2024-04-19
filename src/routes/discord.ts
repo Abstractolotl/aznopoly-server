@@ -12,7 +12,6 @@ export async function handleDiscordAuthentication(request: Request): Promise<Res
         })
     }
 
-    console.log("Handling Discord authentication")
     let body = await request.json();
     if (!body || !body.code) {
         return new Response(JSON.stringify({ message: 'No code provided' }), {
@@ -32,10 +31,7 @@ export async function handleDiscordAuthentication(request: Request): Promise<Res
         })
     })
 
-    console.log(response)
     const { access_token } = (await response.json()) as { access_token: string }
-    console.log(access_token)
-
     return new Response(JSON.stringify({access_token}), {
         headers: HEADERS,
         status: 200
