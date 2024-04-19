@@ -3,14 +3,14 @@ import {handleHealthEndpoints} from "@/routes/health.ts";
 
 describe("health-endpoints", () => {
     test("invalid", () => {
-        expect(handleHealthEndpoints(["bla", "health", "invalid"])?.status).toBe(404)
+        expect(handleHealthEndpoints("/health/invalid")?.status).toBe(404)
     })
 
     test("readiness", () => {
-        expect(handleHealthEndpoints(["bla", "health", "readiness"])?.status).toBe(200)
+        expect(handleHealthEndpoints("/health/readiness")?.status).toBe(200)
     })
 
     test("liveness", () => {
-        expect(handleHealthEndpoints(["bla", "health", "liveness"])?.status).toBe(200)
+        expect(handleHealthEndpoints("/health/liveness")?.status).toBe(200)
     })
 })
