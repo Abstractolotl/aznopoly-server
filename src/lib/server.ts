@@ -21,8 +21,8 @@ export default function startServer(logger: Logger, roomManager: RoomManager, po
             const { pathname } = new URL(request.url);
             const roomRegex = /^\/server\/room\/([a-z\d-]{6,})$/;
 
-            if (method === 'GET' && pathname === '/health') {
-                return handleHealthEndpoints(pathname.split('/'))
+            if (method === 'GET' && pathname.startsWith('/health')) {
+                return handleHealthEndpoints(pathname)
             }
 
             if (method === 'GET') {
